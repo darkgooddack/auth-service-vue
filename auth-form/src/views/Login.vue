@@ -2,7 +2,7 @@
   <div class="form-container">
     <h2>Авторизация</h2>
     <form @submit.prevent="login">
-      <input type="text" v-model="username" placeholder="Username" required />
+      <input type="text" v-model="username" placeholder="Имя пользователя" required />
       <input type="password" v-model="password" placeholder="Пароль" required />
       <button type="submit">Войти</button>
     </form>
@@ -18,44 +18,49 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 
 const username = ref('');
 const password = ref('');
-const user = ref(null);  // для хранения данных пользователя
+const user = ref(JSON.parse(localStorage.getItem('user')) || null);
 const router = useRouter();
 
-// Функция для авторизации
 const login = async () => {
   try {
-    // 1. Запрос на авторизацию и получение токенов
     const response = await axios.post('http://localhost:8000/api/login/', {
-      username: username.value,  // использование username вместо email
+      username: username.value,  // Используем username, а не email
       password: password.value,
     });
 
-    // 2. Сохранение токенов в localStorage
     localStorage.setItem('access_token', response.data.access);
     localStorage.setItem('refresh_token', response.data.refresh);
 
-    // 3. Запрос на получение информации о пользователе с использованием access токена
-    const userResponse = await axios.get('http://localhost:8000/api/user/', {
-      headers: {
-        Authorization: `Bearer ${response.data.access}`
-      }
-    });
-
-    // 4. Сохранение информации о пользователе в переменную user
-    user.value = userResponse.data;
-
-    console.log('Успешный вход', userResponse.data);
-    router.push('/');  // Переход на главную страницу после успешного входа
+    await fetchUserData(response.data.access);
+    router.push('/');
   } catch (error) {
-    console.error('Ошибка входа', error);
+    console.error('Ошибка входа', error.response?.data || error);
   }
 };
+
+const fetchUserData = async (token) => {
+  try {
+    const userResponse = await axios.get('http://localhost:8000/api/user/', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    user.value = userResponse.data;
+    localStorage.setItem('user', JSON.stringify(userResponse.data));
+  } catch (error) {
+    console.error('Ошибка загрузки данных пользователя', error.response?.data || error);
+  }
+};
+
+onMounted(() => {
+  const token = localStorage.getItem('access_token');
+  if (token) fetchUserData(token);
+});
 </script>
 
 <style scoped>
