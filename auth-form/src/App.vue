@@ -3,21 +3,19 @@ import { RouterView } from 'vue-router';
 </script>
 
 <template>
-  <header>
-    <nav>
-      <router-link to="/register">Регистрация</router-link> |
-      <router-link to="/login">Авторизация</router-link>
-    </nav>
-  </header>
-
-  <main>
+  <div id="app">
     <RouterView />
-  </main>
+  </div>
 </template>
 
-<style scoped>
-nav {
-  text-align: center;
-  margin-bottom: 20px;
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#app {
+  font-family: 'Inter', sans-serif;
 }
 </style>
