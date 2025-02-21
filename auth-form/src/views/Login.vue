@@ -1,86 +1,136 @@
 <template>
-  <div class="form-container">
-    <h2>Авторизация</h2>
-    <form @submit.prevent="login">
-      <input type="text" v-model="username" placeholder="Имя пользователя" required />
-      <input type="password" v-model="password" placeholder="Пароль" required />
-      <button type="submit">Войти</button>
-    </form>
-    <p>Нет аккаунта? <router-link to="/register">Зарегистрироваться</router-link></p>
+  <div class="register-container">
+    <div class="content">
+      <img src="@/assets/img.png" alt="App Preview" class="image" />
+      <div class="main-text">Sign In</div>
 
-    <!-- Отображение информации о пользователе -->
-    <div v-if="user">
-      <h3>Информация о пользователе:</h3>
-      <p>Имя: {{ user.username }}</p>
-      <p>Email: {{ user.email }}</p>
+      <!-- Поля ввода -->
+      <InputField label="Username" v-model="username" />
+      <InputField label="Password" v-model="password" type="password" eyeIcon />
+
+      <div class="space"></div>
+
+      <!-- Кнопка "Sign In" -->
+      <BaseButton
+          label="Sign In"
+          to="#"
+          variant="black"
+          :disabled="!isFormValid"
+          @click="login"
+      />
+
+      <!-- Ссылка на регистрацию -->
+      <div class="register-link">
+        Don't have an account? <router-link to="/register">Sign up</router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import InputField from '@/components/InputField.vue'; // Для полей ввода
+import BaseButton from '@/components/BaseButton.vue'; // Для кнопки
 
 const username = ref('');
 const password = ref('');
-const user = ref(JSON.parse(localStorage.getItem('user')) || null);
+const isFormValid = ref(false);
 const router = useRouter();
 
+// Проверка валидности формы
+const validateForm = () => {
+  isFormValid.value = username.value && password.value;
+};
+
+// Логика авторизации
 const login = async () => {
   try {
     const response = await axios.post('http://localhost:8000/api/login/', {
-      username: username.value,  // Используем username, а не email
+      username: username.value,
       password: password.value,
     });
 
     localStorage.setItem('access_token', response.data.access);
     localStorage.setItem('refresh_token', response.data.refresh);
 
-    await fetchUserData(response.data.access);
-    router.push('/');
+    router.push('/profile');  // Перенаправляем на страницу профиля
   } catch (error) {
     console.error('Ошибка входа', error.response?.data || error);
   }
 };
-
-const fetchUserData = async (token) => {
-  try {
-    const userResponse = await axios.get('http://localhost:8000/api/user/', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    user.value = userResponse.data;
-    localStorage.setItem('user', JSON.stringify(userResponse.data));
-  } catch (error) {
-    console.error('Ошибка загрузки данных пользователя', error.response?.data || error);
-  }
-};
-
-onMounted(() => {
-  const token = localStorage.getItem('access_token');
-  if (token) fetchUserData(token);
-});
 </script>
 
 <style scoped>
-.form-container {
-  max-width: 300px;
-  margin: auto;
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 373px;
+  padding: 20px;
   text-align: center;
 }
-input {
-  display: block;
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 8px;
+
+.image {
+  width: 315px;
+  height: 273px;
+  margin-bottom: 30px;
 }
-button {
-  width: 100%;
-  padding: 8px;
-  background-color: #42b983;
-  border: none;
-  color: white;
-  cursor: pointer;
+
+.main-text {
+  font-family: 'Poppins', sans-serif;
+  font-weight: bold;
+  font-size: 30px;
+  margin-bottom: 30px;
+}
+
+input {
+  width: 353px; /* Ширина 353px */
+  height: 56px; /* Высота 56px */
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding-right: 40px; /* Место для глазика справа */
+}
+
+input::placeholder {
+  color: #999; /* Цвет подсказки */
+  font-size: 14px;
+}
+
+.eye-icon img {
+  width: 20px;
+  height: 20px;
+}
+
+.space {
+  margin-top: 20px;
+}
+
+.register-link {
+  font-size: 14px;
+  color: gray;
+  margin-top: 20px;
+}
+
+.register-link a {
+  text-decoration: none;
+  color: #000;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 </style>
