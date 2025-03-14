@@ -41,4 +41,5 @@ npm run dev
 - POST /login/ — Получение JWT-токена
 - POST /token/refresh/ — Обновление JWT-токена
 - GET /user/ — Получение информации о текущем пользователе
+  
 JWT-токен сохраняется в localStorage для последующих запросов.
